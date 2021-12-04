@@ -7,7 +7,7 @@
 #include "include/cuda/common_cuda.h"
 #include "include/cuda/utils_cuda.h"
 #include "include/cuda/format_cuda.h"
-#include "include/cuda/spmv.h"
+#include "include/cuda/spmv_cuda.h"
 
 template <class LIB_IT, class LIB_UIT, class LIB_VT>
 class libHandle
