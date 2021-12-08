@@ -350,6 +350,11 @@ int main(int argc, char *argv[])
     free(csrValA_tmp);
     free(csrRowIdxA_tmp);
 
+    cout << "val A:" << endl;
+    for(int i = 0; i < 100; i++)
+        cout << csrRowPtrA[i] << " ";
+    cout << endl;
+
     double con_time = con_timer.stop();
     cout << "CPU change time = " << con_time << " ms." << endl;
 

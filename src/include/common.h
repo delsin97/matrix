@@ -16,6 +16,6 @@ using namespace std;
 
 #define FORMAT_CSR 0
 #define FORMAT_eCSR 1
-#define FORMAT_HYB5 2
+// #define FORMAT_HYB5 2
 
 #endif

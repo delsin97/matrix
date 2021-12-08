@@ -71,13 +71,10 @@ void spmv_sum(const iT *d_ecsr_num,
 {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
     int pre_idx, curr_idx;
-    if(idx >= d_m)
+    if(idx > d_m)
         return;
-    if(idx == 0)
-        pre_idx = 0;
-    else
-        pre_idx = d_ecsr_num[idx - 1] / width;
-    curr_idx = d_ecsr_num[idx] / width;
+    pre_idx = d_ecsr_num[idx] / width;
+    curr_idx = d_ecsr_num[idx + 1] / width;
     for(int i = pre_idx; i < curr_idx; i++)
     {
         d_y[idx] += d_y_temp[i];

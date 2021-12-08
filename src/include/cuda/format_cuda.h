@@ -82,17 +82,11 @@ __global__
 void each_line(const iT *d_ecsr_num, uiT *d_ecsr_row_bit, int width, int size, iT m) // 获得每一行元素转化为的行数
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if(idx >= m)
+    if(idx > m)
         return;
-    if(idx == 0)
-        d_ecsr_row_bit[idx] = true;
-    else
-    {
-        iT index = d_ecsr_num[idx - 1] / width;
-        // iT index = idx;
-        d_ecsr_row_bit[index] = true;
-    }
-        // d_ecsr_row_bit[d_ecsr_num[idx - 1] / width] = true;
+    iT index = d_ecsr_num[idx] / width;
+    // iT index = idx;
+    d_ecsr_row_bit[index] = true;
 }
 
 // 生成对应的二进制矩阵
@@ -114,10 +108,7 @@ void set_col(const iT *d_csr_row_pointer, const iT *d_ecsr_num, const iT *d_csr_
     iT prev_idx;
     if(tid >= d_m)
         return;
-    if(tid == 0)
-        prev_idx = 0;
-    else
-        prev_idx = d_ecsr_num[tid - 1];
+    prev_idx = d_ecsr_num[tid];
 
     for(iT idx = d_csr_row_pointer[tid], i = 0; idx < d_csr_row_pointer[tid + 1]; idx++)
     {
@@ -134,10 +125,7 @@ void set_val(const iT *d_csr_row_pointer, const iT *d_ecsr_num, const vT *d_csr_
     iT prev_idx;
     if(tid >= d_m)
         return;
-    if(tid == 0)
-        prev_idx = 0;
-    else
-        prev_idx = d_ecsr_num[tid - 1];
+    prev_idx = d_ecsr_num[tid];
 
     for(iT idx = d_csr_row_pointer[tid], i = 0; idx < d_csr_row_pointer[tid + 1]; idx++)
     {

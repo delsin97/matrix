@@ -86,6 +86,8 @@ int libHandle<LIB_IT, LIB_UIT, LIB_VT>::aseCSR()
         // compute sigma
         _sigma = computeSigma();
         cout << "omege = " << OMEGA << ", sigma = " << _sigma << endl;
+
+        // cout << _m + 1 << endl;
         
 
         // 格式转换
@@ -95,28 +97,36 @@ int libHandle<LIB_IT, LIB_UIT, LIB_VT>::aseCSR()
         
         err = reset_row_ptr(_ecsr_row, _m, _sigma);
         // 2.获得总共的数据量 并获得对应的bit-flag
-        checkCudaErrors(cudaMallocManaged((void **)&_ecsr_num, _m * sizeof(LIB_IT)));
-        LIB_IT *_ecsr_num_temp = (LIB_IT *)malloc(sizeof(LIB_IT) * _m);
-        checkCudaErrors(cudaMemcpy(_ecsr_num_temp, _ecsr_row, _m * sizeof(LIB_IT), cudaMemcpyDeviceToHost));
-        // err = get_num(_ecsr_num, _m, _ecsr_row);
-        // _ecsr_num[0] = _ecsr_row[0];
-        // cout << _ecsr_row[9] << endl; // 用于判断col值是否正确
+        checkCudaErrors(cudaMallocManaged((void **)&_ecsr_num, (_m + 1) * sizeof(LIB_IT)));
+        LIB_IT *_ecsr_num_temp = (LIB_IT *)malloc(sizeof(LIB_IT) * (_m + 1));
+        // 初始化
+        memset(_ecsr_num_temp, 0, sizeof(LIB_IT) * (_m + 1));
+        checkCudaErrors(cudaMemcpy((_ecsr_num_temp + 1), _ecsr_row, _m * sizeof(LIB_IT), cudaMemcpyDeviceToHost));
+        // for(int i = 0; i < 101; i++)
+        //     cout << _ecsr_num_temp[i] << " ";
+        // cout << endl;
+        // cout << endl;
         
-        for(int i = 1; i < _m; i++)
-            _ecsr_num_temp[i] = _ecsr_num_temp[i - 1] + _ecsr_row[i];
-        cout << _ecsr_num_temp[_m - 1] << " ";
+        for(int i = 1; i < _m + 1; i++)
+            _ecsr_num_temp[i] = _ecsr_num_temp[i - 1] + _ecsr_row[i - 1];
+        for(int i = 0; i < 101; i++)
+            cout << _ecsr_num_temp[i] << " ";
         cout << endl;
         cout << endl;
-        int size = _ecsr_num_temp[_m - 1];
+
+        cout << _ecsr_num_temp[_m] << " ";
+        cout << endl;
+        cout << endl;
+        int size = _ecsr_num_temp[_m];
         _size = size;
-        checkCudaErrors(cudaMemcpy(_ecsr_num, _ecsr_num_temp, _m * sizeof(LIB_IT), cudaMemcpyHostToDevice));
-        // calculate the number of partitions
+        checkCudaErrors(cudaMemcpy(_ecsr_num, _ecsr_num_temp, (_m + 1) * sizeof(LIB_IT), cudaMemcpyHostToDevice));
+        // 分为多少列
         _p = ceil((double)size / (double)_sigma);
         cout << _p << endl;
         checkCudaErrors(cudaMalloc((void **)&_ecsr_row_bit, _p * sizeof(LIB_UIT)));
         checkCudaErrors(cudaMemset(_ecsr_row_bit, false, _p * sizeof(LIB_UIT)));
         err = set_bit(_ecsr_num, _ecsr_row_bit, _sigma, _p, _m);
-        // LIB_IT *_ecsr_bit_temp = (LIB_IT *)malloc(sizeof(LIB_IT) * _p); // 验证结果
+        // LIB_IT *_ecsr_bit_temp = (LIB_IT *)malloc(sizeof(LIB_UIT) * _p); // 验证结果
         // checkCudaErrors(cudaMemcpy(_ecsr_bit_temp, _ecsr_row_bit, _p * sizeof(LIB_UIT), cudaMemcpyDeviceToHost));
         // for(int i = 0; i < 100; i++)
         //     cout << _ecsr_bit_temp[i] << " ";
@@ -129,11 +139,12 @@ int libHandle<LIB_IT, LIB_UIT, LIB_VT>::aseCSR()
         checkCudaErrors(cudaMalloc((void **)&_ecsr_val, size * sizeof(LIB_VT)));
         checkCudaErrors(cudaMemset(_ecsr_val, 0, size * sizeof(LIB_VT)));
         err = set_value(_csr_row_pointer, _ecsr_num, _csr_column_index, _csr_value, _ecsr_col, _ecsr_val, _m);
-        // LIB_VT *ecsr_val_temp = (LIB_VT *)malloc(size * sizeof(LIB_VT));
-        // checkCudaErrors(cudaMemcpy(ecsr_val_temp, _ecsr_val, size * sizeof(LIB_VT), cudaMemcpyDeviceToHost));
-        // for(int i = 0; i < 100; i++) // 测试是否正确
-        //     cout << ecsr_val_temp[i] << " ";
-        // cout << endl;
+        LIB_VT *ecsr_val_temp = (LIB_VT *)malloc(size * sizeof(LIB_VT));
+        checkCudaErrors(cudaMemcpy(ecsr_val_temp, _ecsr_val, size * sizeof(LIB_VT), cudaMemcpyDeviceToHost));
+        for(int i = 0; i < 100; i++) // 测试是否正确
+            cout << ecsr_val_temp[i] << " ";
+        cout << endl;
+        free(ecsr_val_temp);
         
 
         // 3.将col_idx和val_idx
